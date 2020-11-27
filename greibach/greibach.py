@@ -60,11 +60,86 @@ def left_recursion_elimination(v, p_0):
             p[a_r].append(rhs_copy)
     return p
 
-def begin_with_terminal(p):
-    pass
+def begin_with_terminal(v, p):
+    
+    i = len(v)-1
+    while not v[i].endswith("_rr"): i -= 1
 
-def terminal_followed_by_word_of_variables(p):
-    pass
+    # a_keys: lista de variáveis iniciais
+    # b_keys: lista de variáveis auxiliares
+    a_keys, b_keys = v[:i], v[i:]
+
+    # Percorre variáveis "A" da penúltima para a primeira
+    for a_r in reversed(a_keys[:-1]):
+        
+        # Variável depois de a_r
+        a_s = a_keys[ a_keys.index(a_r)+1 ]
+        
+        # Produções de a_r
+        rhs_list = p[a_r].copy()
+
+        for rhs in rhs_list:
+            if rhs[0] == a_s:
+                for beta in p[a_s]:
+                    beta_copy = beta.copy()
+                    beta_copy.extend(rhs[1:])
+                    p[a_r].append(beta_copy)
+
+                p[a_r].remove(rhs)
+
+    # Percorre as variáveis auxiliares "B"
+    for b in b_keys:
+
+        # Produções de b
+        rhs_list = p[b].copy()
+
+        for rhs in rhs_list:
+            if rhs[0] in a_keys:
+                for beta in p[rhs[0]]:
+                    beta_copy = beta.copy()
+                    beta_copy.extend(rhs[1:])
+                    p[b].append(beta_copy)
+                p[b].remove(rhs)
+
+    return p
+
+def terminal_followed_by_word_of_variables(v, p):
+
+    # Produções auxiliares que poderão ser geradas
+    new_p = {}
+
+    for a_r in v:
+
+        rhs_list = p[a_r].copy()
+        for rhs in rhs_list:
+
+            # Percorre os itens da produção (do 2º até o último)
+            for i in range(1, len(rhs)):
+
+                # Se rhs[i] não é uma variável
+                if rhs[i] not in v:
+                    new_v = None
+
+                    # Verifica se produção já está em new_p
+                    for k, k_list in new_p.items():
+                        if rhs[i] in k_list:
+                            new_v = k
+                    
+                    # Se não está em new_p, cria nova variável auxiliar
+                    if not new_v:
+                        new_v = "X_" + str(len(new_p) + 1)
+                        new_p[new_v] = [rhs[i]]
+                    
+                    # Substitui o terminal pela nova variável
+                    rhs[i] = new_v
+
+            # Atualiza as produções com as novas váriaveis no lugar dos terminais
+            p[a_r] = rhs_list
+
+    # Adiciona as variáveis auxiliares às produções
+    p.update(new_p)
+
+    return p
 
 def print_prod(p):
     for key in p.keys():
@@ -96,12 +171,12 @@ def mk_example(ex_num, v_0, p_0):
         print(colored("Production set elimination of A_r → A_r α.", 'blue'))    
         p_i = left_recursion_elimination(v, p_i)
         print_prod(p_i)
-        print(colored("Each production begining with a terminal.", 'grey'))
-        p_i = begin_with_terminal(p_i)
-        pp.pprint("TO DO!")    
-        print(colored("Each production begining with a terminal followed by a word of variables.", 'grey'))
-        p_i = terminal_followed_by_word_of_variables(p_i)
-        pp.pprint("TO DO!")
+        print(colored("Each production begining with a terminal.", 'blue'))
+        p_i = begin_with_terminal(v, p_i)
+        print_prod(p_i)
+        print(colored("Each production begining with a terminal followed by a word of variables.", 'blue'))
+        p_i = terminal_followed_by_word_of_variables(v, p_i)
+        print_prod(p_i)
     
 if __name__ == "__main__":
     print(colored("Examples of transformations from CFG to Greibach normal form", attrs=['bold']))
