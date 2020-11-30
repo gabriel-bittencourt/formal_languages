@@ -60,10 +60,13 @@ def left_recursion_elimination(v, p_0):
             p[a_r].append(rhs_copy)
     return p
 
+# Foi adicionado à função um novo parâmetro "v" para manter a ordem das variáveis, dado que como "p" é um dicionário,
+# ao tentar recuperar as chaves de "p", a ordem nem sempre era compatível com a ordem em "v"
 def begin_with_terminal(v, p):
     
-    i = len(v)-1
-    while not v[i].endswith("_rr"): i -= 1
+    # Encontra a posição em em v onde começam as variáveis auxiliares
+    i = 0
+    while not v[i].endswith("_rr"): i += 1
 
     # a_keys: lista de variáveis iniciais
     # b_keys: lista de variáveis auxiliares
@@ -103,6 +106,7 @@ def begin_with_terminal(v, p):
 
     return p
 
+# Foi adicionado à função um novo parâmetro "v", com o mesmo objetivo do método anterior
 def terminal_followed_by_word_of_variables(v, p):
 
     # Produções auxiliares que poderão ser geradas
